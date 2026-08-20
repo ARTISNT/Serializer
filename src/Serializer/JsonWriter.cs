@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 
 namespace Serializer;
@@ -20,9 +21,7 @@ public class JsonWriter
 
     public void WritePropertyName(string propertyName)
     {
-        _json.Append('"');
-        _json.Append(propertyName);
-        _json.Append('"');
+        WriteString(propertyName);
         _json.Append(':');
     }
 
@@ -86,12 +85,7 @@ public class JsonWriter
 
     public void WriteNumber(object value)
     {
-        _json.Append(value);
-    }
-
-    public void WriteEnum(Enum val)
-    {
-       _json.Append(val.ToString());
+        _json.Append(Convert.ToString(value, CultureInfo.InvariantCulture));
     }
 
     public void WriteStartOfArray()
@@ -107,11 +101,6 @@ public class JsonWriter
     public void WriteComma()
     {
         _json.Append(',');
-    }
-
-    public void WriteColon()
-    {
-        _json.Append(':');
     }
 
     public void WriteNull()

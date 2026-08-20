@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Globalization;
 
 namespace Serializer;
 
@@ -15,18 +14,22 @@ public class JsonSerializer
         typeof(Int128), typeof(UInt128), typeof(Half)
     ];
 
-    public static string Serialize(object? value)
+    public static string Serialize(object? value,
+                                   JsonSerializerOptions? jsonSerializerOption = null)
     {
+        jsonSerializerOption ??= new JsonSerializerOptions();
+
         var jsonWriter = new JsonWriter();
 
-        Serialize(value, jsonWriter);
+        Serialize(value, jsonWriter, jsonSerializerOption);
 
-        return jsonWriter.GetJson.ToString();
+        return jsonWriter.GetJson;
     }
 
-    private static void Serialize(object value, JsonWriter jsonWriter)
+    private static void Serialize(object value,
+                                  JsonWriter jsonWriter,
+                                  JsonSerializerOptions jsonSerializerOption)
     {
-
         if (value is null)
         {
             jsonWriter.WriteNull();
@@ -35,7 +38,7 @@ public class JsonSerializer
 
         if (value is Enum enumVal)
         {
-            jsonWriter.WriteEnum(enumVal);
+            SerializeEnum(enumVal, jsonWriter, jsonSerializerOption);
             return;
         }
 
@@ -53,25 +56,32 @@ public class JsonSerializer
 
         if (IsNumeric(value))
         {
-            SerializeNumber(value, jsonWriter);
+            SerializeNumber(value, jsonWriter, jsonSerializerOption);
             return;
         }
 
         if (value is IEnumerable enumerable && value is not string)
         {
-            SerializeCollection(enumerable, jsonWriter);
+            SerializeCollection(enumerable, jsonWriter, jsonSerializerOption);
             return;
         }
 
-        SerializeObject(value, jsonWriter);
+        SerializeObject(value, jsonWriter, jsonSerializerOption);
     }
 
-    private static void SerializeNumber(object value, JsonWriter jsonWriter)
+    private static void SerializeNumber(object value,
+                                        JsonWriter jsonWriter,
+                                        JsonSerializerOptions jsonSerializerOption)
     {
         if (value is double d)
         {
             if (double.IsNaN(d) || double.IsInfinity(d))
             {
+                if (jsonSerializerOption.ThrowOnInvalidNumber)
+                    throw new ArgumentException(
+                        "NaN and Infinity are not valid JSON numbers.",
+                        nameof(value));
+
                 jsonWriter.WriteNull();
                 return;
             }
@@ -81,14 +91,21 @@ public class JsonSerializer
         {
             if (float.IsNaN(f) || float.IsInfinity(f))
             {
+                if (jsonSerializerOption.ThrowOnInvalidNumber)
+                    throw new ArgumentException(
+                        "NaN and Infinity are not valid JSON numbers.",
+                        nameof(value));
+
                 jsonWriter.WriteNull();
                 return;
             }
         }
-        jsonWriter.WriteNumber(Convert.ToString(value, CultureInfo.InvariantCulture));
+        jsonWriter.WriteNumber(value);
     }
 
-    private static void SerializeCollection(IEnumerable collection, JsonWriter jsonWriter)
+    private static void SerializeCollection(IEnumerable collection,
+                                            JsonWriter jsonWriter,
+                                            JsonSerializerOptions options)
     {
         bool isFirst = true;
 
@@ -100,12 +117,14 @@ public class JsonSerializer
 
             isFirst = false;
 
-            Serialize(element, jsonWriter);
+            Serialize(element, jsonWriter, options);
         }
         jsonWriter.WriteEndOfArray();
     }
 
-    private static void SerializeObject(object value, JsonWriter jsonWriter)
+    private static void SerializeObject(object value,
+                                        JsonWriter jsonWriter,
+                                        JsonSerializerOptions jsonSerializerOptions)
     {
         bool isFirst = true;
         jsonWriter.WriteStartOfObject();
@@ -113,13 +132,18 @@ public class JsonSerializer
         var properties = value.GetType().GetProperties();
         foreach (var property in properties)
         {
+            var propertyValue = property.GetValue(value);
+
+            if (propertyValue is null && jsonSerializerOptions.IgnoreNullProperties)
+                continue;
+
             if (!isFirst)
                 jsonWriter.WriteComma();
 
             isFirst = false;
 
             jsonWriter.WritePropertyName(property.Name);
-            Serialize(property.GetValue(value), jsonWriter);
+            Serialize(propertyValue, jsonWriter, jsonSerializerOptions);
         }
         jsonWriter.WriteEndOfObject();
     }
@@ -133,5 +157,17 @@ public class JsonSerializer
                     ?? obj.GetType();
 
         return NumericTypes.Contains(type);
+    }
+
+    private static void SerializeEnum(Enum val,
+                                      JsonWriter jsonWriter,
+                                      JsonSerializerOptions jsonSerializerOption)
+    {
+        if (jsonSerializerOption.SerializeEnumAsString)
+        {
+            jsonWriter.WriteString(val.ToString());
+            return;
+        }
+        jsonWriter.WriteNumber(Convert.ToInt32(val));
     }
 }
