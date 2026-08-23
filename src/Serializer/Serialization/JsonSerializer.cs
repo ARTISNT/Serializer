@@ -1,6 +1,6 @@
 using System.Collections;
 
-namespace Serializer;
+namespace Serializer.Serialization;
 
 public class JsonSerializer
 {
@@ -141,6 +141,9 @@ public class JsonSerializer
                 jsonWriter.WriteComma();
 
             isFirst = false;
+
+            if(value == propertyValue)
+                throw new ArgumentException("Recurring call", nameof(value));
 
             jsonWriter.WritePropertyName(property.Name);
             Serialize(propertyValue, jsonWriter, jsonSerializerOptions);

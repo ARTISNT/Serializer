@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace Serializer;
+namespace Serializer.Serialization;
 
 public class JsonWriter
 {

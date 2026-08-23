@@ -1,4 +1,5 @@
-using Serializer;
+using Serializer.Deserialization;
+using Serializer.Serialization;
 using System.Collections;
 using System.Text;
 
@@ -10,11 +11,22 @@ var userProfiles = new List<UserProfile>
     new() { PrimaryDetail = "kdkd", SecondaryDetail = "vodka", MetricValue = double.NaN, Price = 10.2m, ItemCount = -1 }
 };
 
-var singleProfile = new UserProfile() { PrimaryDetail = "kdkd\n", SecondaryDetail = "vodka", UserRectangle = new()
+var singleProfile = new UserProfile
 {
-        SideA = 12,
-        sideB = 13
-} };
+    PrimaryDetail = "kdkd\n",
+    SecondaryDetail = "vodka",
+    // UserRectangle = new()
+    // {
+    //     SideA = 12,
+    //     sideB = 13
+    // },
+    // InUserProfile = new UserProfile()
+    // {
+    //     PrimaryDetail = "kjjjjjjj",
+    //     SecondaryDetail = "jfkj",
+    //     ItemCount = 13
+    // }
+};
 
 var mixedValuesList = new ArrayList
 {
@@ -47,12 +59,24 @@ var messageBuilder = new StringBuilder();
 
 var currentStatus = Status.Deactivated;
 
-var jsonOptions = new JsonSerializerOptions(){
+var jsonOptions = new JsonSerializerOptions()
+{
     IgnoreNullProperties = true,
     SerializeEnumAsString = false
 };
 
-var json = JsonSerializer.Serialize(testStr);
+var number = 12;
+
+var json = JsonSerializer.Serialize(singleProfile);
+
+var reader = new JsonReader(json);
+
+while(reader.Read())
+{
+    Console.WriteLine(reader.TokenType);
+    Console.WriteLine(reader.Value);
+}
+
 File.WriteAllText("Test.json", json);
 
 Console.WriteLine(json);
@@ -82,4 +106,6 @@ class UserProfile
     public Status UserStatus { get; set; }
 
     public Rectangle UserRectangle { get; set; }
+
+    public UserProfile InUserProfile { get; set; }
 }

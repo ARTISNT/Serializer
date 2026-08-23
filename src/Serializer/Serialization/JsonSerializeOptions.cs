@@ -1,4 +1,4 @@
-namespace Serializer;
+namespace Serializer.Serialization;
 
 public class JsonSerializerOptions
 {
