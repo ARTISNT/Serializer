@@ -71,7 +71,7 @@ var json = JsonSerializer.Serialize(singleProfile);
 
 var reader = new JsonReader(json);
 
-while(reader.Read())
+while (reader.Read())
 {
     Console.WriteLine(reader.TokenType);
     Console.WriteLine(reader.Value);
@@ -80,6 +80,30 @@ while(reader.Read())
 File.WriteAllText("Test.json", json);
 
 Console.WriteLine(json);
+
+var rectangle = new Rectangle()
+{
+    IsItSquare = true,
+    NameOfRectangle = "Vasilisa",
+    SideA = 13,
+    SideB = 14
+};
+
+var json2 = JsonSerializer.Serialize(rectangle);
+Console.WriteLine(json2);
+var obj = JsonDesirializer.Desiriailize<Rectangle>(json2
+            // """
+            // {
+            //     "SideA":12,
+            //     "SideB": 23,
+            //     "NameOfRectangle":"Vasilias",
+            //     "IsItSquare": true
+            // }
+            // """
+            );
+
+var json3 = JsonSerializer.Serialize(obj);
+Console.WriteLine(json2);
 
 
 enum Status
@@ -91,7 +115,9 @@ enum Status
 class Rectangle
 {
     public int SideA { get; set; } = 12;
-    public int sideB { get; set; } = 25;
+    public int SideB { get; set; } = 25;
+    public string NameOfRectangle { get; set; } = "Lolal";
+    public bool IsItSquare { get; set; } = true;
 }
 
 class UserProfile
@@ -104,6 +130,7 @@ class UserProfile
     public decimal Price { get; set; }
     public List<int> Numbers { get; set; } = [2, 5, 4, 5, 5, 12];
     public Status UserStatus { get; set; }
+    public bool IsMale { get; set; }
 
     public Rectangle UserRectangle { get; set; }
 
