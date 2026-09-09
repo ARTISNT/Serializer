@@ -1,4 +1,4 @@
 <Solution>
+  <Project Path="Serializer.Tests/Serializer.Tests.csproj" />
   <Project Path="Serializer/Serializer.csproj" />
-  <Project Path="SerializerTest/SerializerTest.csproj" />
 </Solution>
